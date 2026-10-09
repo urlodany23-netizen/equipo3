@@ -1,0 +1,492 @@
+/* The stage artwork is drawn locally with SVG. No external assets or fonts. */
+.pagina {
+  --electric: #ff526b;
+  --electric-action: #c61937;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0 5.5%;
+  background: #0c0d0f;
+}
+
+.ambient-lights {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 17% 48%, #ce123331, transparent 42%),
+    radial-gradient(ellipse at 86% 33%, #92112e24, transparent 38%),
+    repeating-linear-gradient(0deg, transparent 0 3px, #ffffff02 3px 4px);
+}
+
+.cabecera {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 25px 0;
+  border-color: #ffffff14;
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 11px;
+  font-size: 23px;
+  font-style: italic;
+  letter-spacing: -1px;
+}
+
+.marca .marca-emblema {
+  display: grid;
+  place-items: center;
+  width: 37px;
+  height: 40px;
+  background: var(--electric);
+  color: #240910;
+  clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%);
+}
+
+.marca-emblema svg { width: 26px; height: 26px; }
+.marca .marca-nombre { color: #f7f4f5; }
+.marca-nombre span { color: var(--electric); }
+
+.etiqueta {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 10px;
+  letter-spacing: 1.7px;
+  color: #85878a;
+}
+
+.motion-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid #473037;
+  border-radius: 5px;
+  background: transparent;
+  color: #c5afb5;
+  font-size: 11px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.motion-toggle:hover:not(:disabled) { background: #ff526b16; color: var(--electric); }
+
+.entrada {
+  width: 100%;
+  max-width: 1280px;
+  flex: 1;
+  grid-template-columns: minmax(0, 1.3fr) minmax(350px, 0.9fr);
+  gap: clamp(40px, 5.5vw, 100px);
+  margin: 56px auto 44px;
+}
+
+.presentacion { min-width: 0; }
+
+.hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 24px;
+  color: #d0b8be;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+.hero-eyebrow > span {
+  width: 7px;
+  height: 7px;
+  background: var(--electric);
+  box-shadow: 0 0 12px #ff365890;
+}
+
+.presentacion h1 {
+  position: relative;
+  z-index: 1;
+  width: fit-content;
+  margin: 0 0 24px;
+  font-family: Impact, "Arial Narrow", "Arial Black", sans-serif;
+  font-weight: 900;
+  font-size: clamp(68px, 7.6vw, 112px);
+  font-style: italic;
+  line-height: .94;
+  letter-spacing: -2px;
+  color: #f4eff0;
+}
+
+.presentacion h1 > span {
+  color: var(--electric);
+  text-shadow: 0 0 55px #f3294926;
+}
+
+.hero-description {
+  max-width: 420px;
+  margin: 0;
+  color: #b2a3a8;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.hero-genres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding-top: 16px;
+  border-top: 1px solid #ffffff12;
+  color: #b6a0a7;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 9px;
+  letter-spacing: 1.4px;
+}
+
+.hero-genres > span + span::before {
+  content: "+";
+  margin-right: 14px;
+  color: #bd586d;
+}
+
+/* A floating pair of electric guitars with independently moving light trails. */
+.electric-stage {
+  position: relative;
+  height: 305px;
+  margin: 12px -12px 8px;
+  pointer-events: none;
+}
+
+.stage-halo {
+  position: absolute;
+  inset: 15% 13% 7%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #f624493a, #af0c2d26 40%, transparent 70%);
+  animation: stage-breathe 7s ease-in-out infinite;
+}
+
+.stage-orbit {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 245px;
+  height: 245px;
+  border: 1px solid #f27c9433;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.stage-orbit--inner { width: 175px; height: 175px; border-style: dashed; border-color: #f27c9424; }
+.stage-orbit--outer::before, .stage-orbit--outer::after {
+  content: "";
+  position: absolute;
+  inset: 50% -45px auto;
+  height: 1px;
+  background: #f27c941b;
+}
+.stage-orbit--outer::after { transform: rotate(90deg); }
+
+.stage-coordinate {
+  position: absolute;
+  top: 32px;
+  left: 20px;
+  color: #b67a88;
+  font: 8px Consolas, "Courier New", monospace;
+  letter-spacing: 1.5px;
+}
+
+.stage-coordinate--right { inset: auto 20px 58px auto; writing-mode: vertical-rl; }
+.stage-lightning { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+.lightning {
+  --charge-min: .65;
+  --charge-max: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px #ff274fcc) drop-shadow(0 0 14px #d5083880);
+  animation: lightning-charge 3.8s ease-in-out infinite;
+}
+
+.lightning--right { animation-delay: -1.9s; }
+.lightning--lower {
+  --charge-min: .3;
+  --charge-max: .65;
+  animation-delay: -2.7s;
+}
+
+.lightning-aura { stroke: #f61b40; stroke-width: 15; opacity: .25; filter: blur(3px); }
+.lightning-body { stroke: #ff3657; stroke-width: 4.5; }
+.lightning-core { stroke: #fff0f2; stroke-width: 1.5; }
+.lightning-branches { stroke: #ff8299; stroke-width: 1.6; }
+.lightning-energy {
+  stroke: #fff;
+  stroke-width: 2.7;
+  stroke-dasharray: 12 88;
+  filter: drop-shadow(0 0 4px #fff0f2);
+  animation: lightning-travel 2.8s linear infinite;
+}
+.lightning--right .lightning-energy { animation-delay: -1.4s; }
+.lightning--lower .lightning-energy { animation-delay: -.7s; animation-duration: 3.8s; }
+
+.guitar-float {
+  position: absolute;
+  width: 123px;
+  height: 330px;
+  top: -20px;
+  animation: guitar-float 7s ease-in-out infinite;
+}
+
+.guitar-float--crimson { left: calc(50% - 118px); animation-delay: -3.5s; }
+.guitar-float--scarlet { left: calc(50% - 2px); }
+.stage-guitar { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(6px 17px 9px #0009); }
+.stage-guitar--crimson { transform: rotate(-32deg); }
+.stage-guitar--scarlet { transform: rotate(32deg); }
+
+.stage-caption {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #b18691;
+  font: 8px Consolas, "Courier New", monospace;
+  letter-spacing: 2px;
+}
+
+.stage-caption > span { width: 22px; height: 1px; background: #955467; }
+.stage-sparks { position: absolute; inset: 0; }
+.stage-sparks > span {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  left: calc(10% + var(--spark) * 11%);
+  top: calc(26% + mod(var(--spark), 3) * 20%);
+  background: #ffd0d8;
+  box-shadow: 0 0 5px #ffe5eb, 0 0 12px #ff284f;
+  animation: spark-rise 5s ease-in-out infinite;
+  animation-delay: calc(var(--spark) * -.7s);
+}
+
+/* Backstage pass: a deliberately quiet surface around the working form. */
+.acceso-formulario {
+  position: relative;
+  align-self: center;
+  min-width: 0;
+  padding: 0 34px 25px;
+  border: 1px solid #4d2935;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #23191f, #181418 55%);
+  box-shadow: 0 24px 65px #0004, 0 0 70px #e221421e;
+}
+
+.acceso-formulario::before,
+.acceso-formulario::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  top: 20px;
+  border: 1px solid #845662;
+  border-radius: 50%;
+  background: #332129;
+}
+.acceso-formulario::before { left: 14px; }
+.acceso-formulario::after { right: 14px; }
+
+.access-ticket {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: 0 -34px 28px;
+  padding: 16px 34px;
+  border-bottom: 1px dashed #53323f;
+  color: var(--electric);
+  font: 10px Consolas, "Courier New", monospace;
+  letter-spacing: 1.5px;
+}
+
+.access-ticket > span:first-child { display: flex; align-items: center; gap: 7px; }
+.access-ticket svg { width: 15px; height: 15px; }
+.ticket-number { color: #b08894; font-size: 9px; white-space: nowrap; }
+.access-mode { display: flex; align-items: center; justify-content: space-between; color: #b88e9b; font-size: 9px; letter-spacing: 1.7px; }
+.amplifier-led { width: 5px; height: 5px; border-radius: 50%; background: var(--electric); box-shadow: 0 0 7px #ff3658aa; }
+
+.acceso-formulario h2 { margin: 14px 0 10px; font-size: clamp(27px, 2.6vw, 36px); letter-spacing: -1.5px; font-weight: 800; }
+.acceso-formulario .access-intro { color: #b5a0a8; margin: 0 0 10px; font-size: 13px; line-height: 1.65; }
+.acceso-formulario label { margin: 21px 0 10px; font-size: 12px; color: #ddcbd1; }
+.acceso-formulario input { padding: 14px 15px; border: 1px solid #4b303c; border-radius: 5px; background: #100c10; color: #f8f1f3; font-size: 13px; transition: border-color .2s, box-shadow .2s; }
+.acceso-formulario input::placeholder { color: #a18c96; }
+.acceso-formulario input:focus { border-color: #e55170; box-shadow: 0 0 0 3px #ff526b18; }
+.acceso-formulario .password-hint { margin: 9px 0 0; font-size: 11px; color: #bda5af; }
+
+.acceso-formulario .access-submit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 26px;
+  padding: 15px 18px;
+  border: 1px solid #e44b66;
+  border-radius: 5px;
+  background: var(--electric-action);
+  color: #fff5f7;
+  font-size: 13px;
+  font-weight: 800;
+  transition: background .2s, box-shadow .2s, transform .2s;
+}
+
+.access-submit svg { width: 20px; height: 20px; transition: transform .2s; }
+.acceso-formulario .access-submit:hover:not(:disabled) { background: #df2545; box-shadow: 0 0 28px #ff345d45; transform: translateY(-2px); }
+.access-submit:hover:not(:disabled) svg { transform: translateX(3px); }
+.access-submit:active:not(:disabled) { transform: translateY(0); }
+.access-divider { display: flex; align-items: center; gap: 12px; margin: 28px 0 0; color: #b4909e; font-size: 8px; letter-spacing: 1px; white-space: nowrap; }
+.access-divider > span { flex: 1; height: 1px; background: #4a2e3a; }
+
+.acceso-formulario .enlace-formulario {
+  margin-top: 17px;
+  padding: 13px;
+  border: 1px solid #5b3544;
+  border-radius: 5px;
+  color: #edd0da;
+  font-size: 12px;
+  font-weight: 600;
+  transition: border-color .2s, background .2s;
+}
+.acceso-formulario .enlace-formulario:hover:not(:disabled) { background: #ff526b10; border-color: #b45472; color: var(--electric); }
+.acceso-formulario .recovery-link {
+  margin-top: 12px;
+  padding: 4px;
+  border: 0;
+  color: #c998a6;
+  font-size: 11px;
+  letter-spacing: .2px;
+}
+.acceso-formulario .recovery-link:hover:not(:disabled) { background: transparent; border-color: transparent; color: var(--electric); text-decoration: underline; }
+.acceso-formulario .access-footnote { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 23px 0 0; color: #b4909e; font-size: 10px; }
+.access-footnote svg { width: 12px; height: 12px; color: #dc889f; }
+.acceso-formulario .error, .acceso-formulario .mensaje-exito { font-size: 12px; margin-bottom: 0; }
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  max-width: 1400px;
+  margin: auto auto 0;
+  padding: 23px 0;
+  border-top: 1px solid #ffffff14;
+  color: #ad8a96;
+  font: 9px Consolas, "Courier New", monospace;
+  letter-spacing: 1.4px;
+}
+.site-footer > span { display: flex; align-items: center; gap: 10px; }
+.site-footer > span:last-child { color: #d0afb9; }
+.site-footer svg { width: 13px; height: 13px; color: var(--electric); }
+.equalizer { display: inline-flex; align-items: center; justify-content: center; gap: 2px; height: 14px; width: 18px; color: var(--electric); }
+.equalizer > i { height: 12px; width: 2px; background: currentColor; transform: scaleY(.5); animation: equalizer-beat 1.4s ease-in-out infinite alternate; animation-delay: calc(var(--bar) * -.24s); }
+
+/* Carry the palette into the existing, permission-aware dashboard. */
+.panel { width: 100%; }
+.panel .tarjeta { background: #1c161a; border-color: #482b38; border-radius: 10px; }
+.panel .bienvenida { border-top: 2px solid var(--electric); background: radial-gradient(ellipse at 95% 0, #a820452d, transparent 65%), #1c161a; }
+.panel .subtitulo { color: var(--electric); }
+.panel .roles span, .panel .categoria-publicacion { background: #451b2c; color: #ffb8c8; }
+.panel button:not(.secundario) { background: #c61937; color: #fff5f7; }
+.panel button:not(.secundario):hover:not(:disabled) { background: #df2545; }
+.panel .secundario { background: #492b39; }
+.panel .secundario:hover:not(:disabled) { background: #633348; }
+.panel .publicacion { border-color: #4b2d3c; background: #160f14; }
+.panel .opcion-rol input { accent-color: #e83256; }
+.pagina :focus-visible { outline-color: #ff526b; }
+
+@keyframes guitar-float {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+}
+@keyframes stage-breathe {
+  0%, 100% { opacity: .55; transform: scale(.92); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+@keyframes lightning-charge {
+  0%, 100% { opacity: var(--charge-min); }
+  40%, 60% { opacity: var(--charge-max); }
+}
+@keyframes lightning-travel {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes spark-rise {
+  0%, 100% { transform: translateY(16px); opacity: 0; }
+  40% { opacity: .7; }
+  80% { transform: translateY(-25px); opacity: 0; }
+}
+@keyframes equalizer-beat {
+  from { transform: scaleY(.25); }
+  to { transform: scaleY(1); }
+}
+
+.animaciones-pausadas *, .animaciones-pausadas *::before, .animaciones-pausadas *::after { animation-play-state: paused !important; }
+.animaciones-pausadas .lightning { animation: none; opacity: var(--charge-max); }
+.animaciones-pausadas .lightning-energy { opacity: 0; }
+
+@media (max-width: 1050px) {
+  .etiqueta { display: none; }
+  .entrada { gap: 35px; grid-template-columns: minmax(0, 1fr) minmax(320px, .95fr); }
+  .presentacion h1 { font-size: clamp(60px, 8.4vw, 88px); }
+  .hero-description { font-size: 13px; }
+  .hero-genres { gap: 9px; font-size: 8px; letter-spacing: .7px; }
+  .hero-genres > span + span::before { margin-right: 9px; }
+  .acceso-formulario { padding-left: 25px; padding-right: 25px; }
+  .access-ticket { margin-left: -25px; margin-right: -25px; padding-left: 25px; padding-right: 25px; }
+  .stage-coordinate { left: 0; font-size: 7px; }
+}
+
+@media (max-width: 760px) {
+  .pagina { padding: 0 6%; }
+  .cabecera { padding: 20px 0; gap: 10px; }
+  .marca { font-size: 19px; gap: 7px; }
+  .marca .marca-emblema { width: 29px; height: 33px; }
+  .marca-emblema svg { width: 22px; height: 22px; }
+  .motion-toggle { padding: 8px; font-size: 9px; gap: 6px; }
+  .entrada { grid-template-columns: minmax(0, 1fr); gap: 34px; margin: 38px auto 40px; max-width: 520px; }
+  .presentacion h1 { font-size: clamp(68px, 14vw, 96px); }
+  .hero-eyebrow { font-size: 9px; margin-bottom: 20px; }
+  .hero-description { font-size: 13px; max-width: 360px; }
+  .electric-stage { height: 260px; margin-top: 15px; }
+  .guitar-float { height: 285px; width: 106px; top: -18px; }
+  .guitar-float--crimson { left: calc(50% - 100px); }
+  .stage-orbit--outer { width: 205px; height: 205px; }
+  .stage-orbit--inner { width: 150px; height: 150px; }
+  .hero-genres { justify-content: space-between; }
+  .hero-genres > span + span::before { display: none; }
+  .acceso-formulario { padding: 0 26px 24px; }
+  .access-ticket { margin: 0 -26px 25px; padding: 17px 26px; }
+  .acceso-formulario h2 { font-size: 32px; }
+  .site-footer { justify-content: center; font-size: 8px; }
+  .site-footer > span:first-child { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 370px) {
+  .marca { font-size: 17px; }
+  .motion-toggle { border-color: transparent; padding: 4px; }
+  .motion-toggle .equalizer { display: none; }
+  .presentacion h1 { font-size: 62px; }
+  .ticket-number { display: none; }
+  .hero-genres { letter-spacing: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pagina *, .pagina *::before, .pagina *::after { animation: none !important; transition: none !important; }
+  .lightning { opacity: var(--charge-max); }
+  .lightning-energy { opacity: 0; }
+  .acceso-formulario .access-submit:hover:not(:disabled), .access-submit:hover:not(:disabled) svg { transform: none; }
+}

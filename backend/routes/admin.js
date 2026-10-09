@@ -9,6 +9,108 @@ const {
 const router = express.Router();
 
 router.get(
+  "/solicitudes-password",
+  autenticar,
+  requerirPermiso("contrasenas.gestionar"),
+  async (req, res) => {
+    try {
+      const resultado = await pool.query(
+        `SELECT s.id, s.usuario_id, u.nombre AS usuario, u.email,
+                s.estado, s.respuesta, s.creado_en, s.resuelto_en,
+                r.nombre AS resuelto_por
+         FROM solicitudes_password s
+         JOIN usuarios u ON u.id = s.usuario_id
+         LEFT JOIN usuarios r ON r.id = s.resuelto_por
+         ORDER BY s.creado_en DESC, s.id DESC
+         LIMIT 100`
+      );
+
+      return res.json({ solicitudes: resultado.rows });
+    } catch (error) {
+      console.error("Error al consultar recuperaciones:", error.code || error.message);
+      return res.status(500).json({ mensaje: "No se pudieron consultar las recuperaciones." });
+    }
+  }
+);
+
+router.put(
+  "/solicitudes-password/:id",
+  autenticar,
+  requerirPermiso("contrasenas.gestionar"),
+  async (req, res) => {
+    const solicitudId = Number(req.params.id);
+    const { decision, respuesta } = req.body || {};
+
+    if (!Number.isInteger(solicitudId) || solicitudId <= 0 || (decision !== "aprobada" && decision !== "rechazada")) {
+      return res.status(400).json({ mensaje: "La decisión indicada no es válida." });
+    }
+
+    if (respuesta !== undefined && (typeof respuesta !== "string" || respuesta.length > 1000)) {
+      return res.status(400).json({ mensaje: "La respuesta no es válida." });
+    }
+
+    let client;
+    try {
+      client = await pool.connect();
+      await client.query("BEGIN");
+
+      const solicitud = await client.query(
+        `SELECT id, usuario_id, password_hash, estado
+         FROM solicitudes_password WHERE id = $1 FOR UPDATE`,
+        [solicitudId]
+      );
+
+      if (solicitud.rowCount !== 1) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ mensaje: "La solicitud no existe." });
+      }
+
+      const datos = solicitud.rows[0];
+      if (datos.estado !== "pendiente") {
+        await client.query("ROLLBACK");
+        return res.status(409).json({ mensaje: "La solicitud ya fue resuelta." });
+      }
+
+      if (datos.usuario_id === req.usuario.id) {
+        await client.query("ROLLBACK");
+        return res.status(403).json({ mensaje: "Otra cuenta administrativa debe resolver esta solicitud." });
+      }
+
+      if (decision === "aprobada") {
+        await client.query(
+          "UPDATE usuarios SET password_hash = $1 WHERE id = $2 AND activo = TRUE",
+          [datos.password_hash, datos.usuario_id]
+        );
+      }
+
+      await client.query(
+        `UPDATE solicitudes_password
+         SET estado = $1, respuesta = $2, resuelto_por = $3, resuelto_en = CURRENT_TIMESTAMP
+         WHERE id = $4`,
+        [decision, typeof respuesta === "string" ? respuesta.trim() : null, req.usuario.id, solicitudId]
+      );
+
+      await client.query(
+        `INSERT INTO auditoria (usuario_id, accion, resultado, recurso, recurso_id, ip, detalles)
+         VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)`,
+        [req.usuario.id, `usuario.password.recuperacion.${decision}`, "exito", "solicitudes_password", String(solicitudId), req.ip, JSON.stringify({ usuario_id: datos.usuario_id })]
+      );
+
+      await client.query("COMMIT");
+      return res.json({ mensaje: decision === "aprobada" ? "Cambio de contraseña aprobado." : "Solicitud rechazada." });
+    } catch (error) {
+      if (client) {
+        try { await client.query("ROLLBACK"); } catch (rollbackError) { console.error("Error al cancelar recuperación:", rollbackError.code); }
+      }
+      console.error("Error al resolver recuperación:", error.code || error.message);
+      return res.status(500).json({ mensaje: "No se pudo resolver la solicitud." });
+    } finally {
+      if (client) client.release();
+    }
+  }
+);
+
+router.get(
   "/auditoria",
   autenticar,
   requerirPermiso("auditoria.leer"),

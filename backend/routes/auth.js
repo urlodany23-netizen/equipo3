@@ -31,6 +31,16 @@ const limiteLogin = rateLimit({
   },
 });
 
+const limiteRecuperacion = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    mensaje: "Demasiadas solicitudes. Intenta nuevamente más tarde.",
+  },
+});
+
 // Permite comprobar una contraseña aunque el usuario no exista.
 const hashDePrueba = bcrypt.hash("clave-interna-no-utilizable", 12);
 
@@ -294,6 +304,124 @@ router.post("/login", limiteLogin, async (req, res) => {
     return res.status(500).json({
       mensaje: "No se pudo iniciar sesión.",
     });
+  }
+});
+
+// CAMBIO DE CONTRASEÑA PARA USUARIOS AUTENTICADOS
+router.put("/password", autenticar, async (req, res) => {
+  const { passwordActual, passwordNueva } = req.body || {};
+
+  if (typeof passwordActual !== "string" || typeof passwordNueva !== "string") {
+    return res.status(400).json({ mensaje: "Completa ambas contraseñas." });
+  }
+
+  if (
+    passwordNueva.length < 12 ||
+    Buffer.byteLength(passwordNueva, "utf8") > 72 ||
+    passwordNueva.includes("\0")
+  ) {
+    return res.status(400).json({
+      mensaje: "La contraseña nueva debe tener al menos 12 caracteres y máximo 72 bytes.",
+    });
+  }
+
+  try {
+    const usuario = await pool.query(
+      "SELECT password_hash FROM usuarios WHERE id = $1 AND activo = TRUE",
+      [req.usuario.id]
+    );
+
+    if (usuario.rowCount !== 1) {
+      return res.status(401).json({ mensaje: "La sesión no es válida." });
+    }
+
+    const actualCorrecta = await bcrypt.compare(
+      passwordActual,
+      usuario.rows[0].password_hash
+    );
+
+    if (!actualCorrecta) {
+      return res.status(400).json({ mensaje: "La contraseña actual no es correcta." });
+    }
+
+    const passwordHash = await bcrypt.hash(passwordNueva, 12);
+
+    await pool.query(
+      "UPDATE usuarios SET password_hash = $1 WHERE id = $2",
+      [passwordHash, req.usuario.id]
+    );
+
+    await pool.query(
+      `INSERT INTO auditoria (usuario_id, accion, resultado, recurso, recurso_id, ip)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [req.usuario.id, "usuario.password.cambiada", "exito", "usuarios", String(req.usuario.id), req.ip]
+    );
+
+    return res.json({ mensaje: "Contraseña cambiada correctamente." });
+  } catch (error) {
+    console.error("Error al cambiar contraseña:", error.code || error.message);
+    return res.status(500).json({ mensaje: "No se pudo cambiar la contraseña." });
+  }
+});
+
+// RECUPERACIÓN: se guarda el hash nuevo hasta que un administrador apruebe.
+router.post("/recuperar", limiteRecuperacion, async (req, res) => {
+  const { email, passwordNueva } = req.body || {};
+  const mensajeGenerico =
+    "Si el correo existe, la solicitud quedó enviada para revisión del administrador.";
+
+  if (typeof email !== "string" || typeof passwordNueva !== "string") {
+    return res.status(400).json({ mensaje: "Correo y contraseña nueva son obligatorios." });
+  }
+
+  const emailLimpio = email.trim().toLowerCase();
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio)) {
+    return res.status(400).json({ mensaje: "Escribe un correo válido." });
+  }
+
+  if (
+    passwordNueva.length < 12 ||
+    Buffer.byteLength(passwordNueva, "utf8") > 72 ||
+    passwordNueva.includes("\0")
+  ) {
+    return res.status(400).json({
+      mensaje: "La contraseña nueva debe tener al menos 12 caracteres y máximo 72 bytes.",
+    });
+  }
+
+  try {
+    const usuario = await pool.query(
+      "SELECT id FROM usuarios WHERE LOWER(email) = $1 AND activo = TRUE",
+      [emailLimpio]
+    );
+
+    if (usuario.rowCount === 0) {
+      return res.status(202).json({ mensaje: mensajeGenerico });
+    }
+
+    const passwordHash = await bcrypt.hash(passwordNueva, 12);
+
+    await pool.query(
+      `INSERT INTO solicitudes_password (usuario_id, password_hash)
+       VALUES ($1, $2)`,
+      [usuario.rows[0].id, passwordHash]
+    );
+
+    await pool.query(
+      `INSERT INTO auditoria (usuario_id, accion, resultado, recurso, recurso_id, ip)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [usuario.rows[0].id, "usuario.password.recuperacion.solicitada", "exito", "solicitudes_password", String(usuario.rows[0].id), req.ip]
+    );
+
+    return res.status(202).json({ mensaje: mensajeGenerico });
+  } catch (error) {
+    if (error.code === "23505") {
+      return res.status(202).json({ mensaje: mensajeGenerico });
+    }
+
+    console.error("Error al solicitar recuperación:", error.code || error.message);
+    return res.status(500).json({ mensaje: "No se pudo enviar la solicitud." });
   }
 });
 

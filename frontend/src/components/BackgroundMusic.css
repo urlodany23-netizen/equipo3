@@ -1,0 +1,29 @@
+.music-deck {
+  width: 100%;
+  max-width: 1280px;
+  margin: 24px auto 0;
+  border: 1px solid #492532;
+  border-radius: 8px;
+  background: linear-gradient(110deg, #36121e60, #171215);
+}
+
+.music-bar { display: flex; align-items: center; gap: 15px; padding: 15px 18px; }
+.music-emblem { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 42px; border: 1px solid #8e2b45; border-radius: 4px; background: #421325; color: #ff7b93; }
+.music-emblem svg { width: 23px; height: 23px; }
+.music-info { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; }
+.music-eyebrow { font: 9px Consolas, "Courier New", monospace; letter-spacing: 1.5px; color: #ee819b; }
+.music-info strong { color: #f3e4e9; font-size: 13px; overflow-wrap: anywhere; }
+.music-info > span:last-child { color: #b49aa5; font-size: 11px; }
+.music-controls { flex: 0 1 360px; min-width: 0; }
+.music-controls audio { display: block; width: 100%; color-scheme: dark; }
+.music-autoplay-notice { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 12px 18px; border-top: 1px solid #492532; background: #3d1120; color: #f6c8d2; font-size: 12px; }
+.music-autoplay-notice button { padding: 9px 14px; border: 1px solid #ef5d78; border-radius: 5px; background: #c61937; color: white; }
+.music-autoplay-notice button:hover:not(:disabled) { background: #df2545; }
+.music-error { margin: 0; padding: 0 18px 16px; color: #ffb9c7; font-size: 12px; }
+
+@media (max-width: 760px) {
+  .music-bar { flex-wrap: wrap; gap: 12px; padding: 14px; }
+  .music-info strong { font-size: 12px; }
+  .music-controls { flex-basis: 100%; }
+  .music-autoplay-notice { align-items: stretch; flex-direction: column; text-align: center; }
+}

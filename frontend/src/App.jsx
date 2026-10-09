@@ -2,15 +2,29 @@ import { useState } from "react";
 import Usuarios from "./components/Usuarios";
 import Solicitudes from "./components/Solicitudes";
 import SolicitudesAdmin from "./components/SolicitudesAdmin";
+import SolicitudesPasswordAdmin from "./components/SolicitudesPasswordAdmin";
+import CambioPassword from "./components/CambioPassword";
 import Publicaciones from "./components/Publicaciones";
 import Roles from "./components/Roles";
+import ElectricStage from "./components/ElectricStage";
+import BackgroundMusic from "./components/BackgroundMusic";
+import { ArrowIcon, BoltIcon, Equalizer } from "./components/RockIcons";
 import "./App.css";
+import "./ElectricTheme.css";
 
 export default function App() {
+  const [modoRegistro, setModoRegistro] = useState(false);
+  const [modoRecuperacion, setModoRecuperacion] = useState(false);
+  const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirmacion, setPasswordConfirmacion] = useState("");
   const [sesion, setSesion] = useState(null);
   const [error, setError] = useState("");
+  const [mensajeRegistro, setMensajeRegistro] = useState("");
+  const [animacionesPausadas, setAnimacionesPausadas] = useState(
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
   const [cargando, setCargando] = useState(false);
   const [registros, setRegistros] = useState(null);
 
@@ -24,6 +38,7 @@ export default function App() {
   async function iniciarSesion(event) {
     event.preventDefault();
     setError("");
+    setMensajeRegistro("");
     setCargando(true);
 
     try {
@@ -55,6 +70,93 @@ export default function App() {
     } finally {
       setCargando(false);
     }
+  }
+
+  async function registrarUsuario(event) {
+    event.preventDefault();
+    setError("");
+    setMensajeRegistro("");
+    setCargando(true);
+
+    try {
+      const respuesta = await fetch("/api/auth/registro", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ nombre, email, password }),
+      });
+
+      const datos = await respuesta.json();
+
+      if (!respuesta.ok) {
+        throw new Error(datos.mensaje || "No se pudo crear la cuenta.");
+      }
+
+      setModoRegistro(false);
+      setNombre("");
+      setPassword("");
+      setMensajeRegistro("Cuenta creada correctamente. Ya puedes iniciar sesión.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo conectar con el servidor."
+      );
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  async function solicitarRecuperacion(event) {
+    event.preventDefault();
+    setError("");
+    setMensajeRegistro("");
+
+    if (password !== passwordConfirmacion) {
+      setError("La confirmación no coincide con la contraseña nueva.");
+      return;
+    }
+
+    setCargando(true);
+    try {
+      const respuesta = await fetch("/api/auth/recuperar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, passwordNueva: password }),
+      });
+      const datos = await respuesta.json();
+      if (!respuesta.ok) throw new Error(datos.mensaje || "No se pudo enviar la solicitud.");
+      setModoRecuperacion(false);
+      setPassword("");
+      setPasswordConfirmacion("");
+      setMensajeRegistro(datos.mensaje);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo conectar con el servidor.");
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  function cambiarModoAcceso() {
+    setModoRegistro((actual) => !actual);
+    setModoRecuperacion(false);
+    setNombre("");
+    setEmail("");
+    setPassword("");
+    setPasswordConfirmacion("");
+    setError("");
+    setMensajeRegistro("");
+  }
+
+  function cambiarModoRecuperacion() {
+    setModoRecuperacion((actual) => !actual);
+    setModoRegistro(false);
+    setNombre("");
+    setPassword("");
+    setPasswordConfirmacion("");
+    setError("");
+    setMensajeRegistro("");
   }
 
   async function consultarAuditoria() {
@@ -127,39 +229,107 @@ const puedeEliminarPublicaciones =
 const puedeGestionarRoles =
   sesion?.usuario.permisos.includes("roles.gestionar");
 
+  const puedeGestionarContrasenas =
+    sesion?.usuario.permisos.includes("contrasenas.gestionar");
+
   return (
-    <main className="pagina">
+    <main className={`pagina${animacionesPausadas ? " animaciones-pausadas" : ""}`}>
+      <div className="ambient-lights" aria-hidden="true" />
       <header className="cabecera">
         <a className="marca" href="/">
-          METAL<span>VERSE</span>
+          <span className="marca-emblema"><BoltIcon /></span>
+          <span className="marca-nombre">METAL<span>VERSE</span></span>
         </a>
 
-        <span className="etiqueta">
-          Rock · Metal · Comunidad
-        </span>
+        <span className="etiqueta">PARA QUIENES SIENTEN LA MÚSICA.</span>
+        <button
+          type="button"
+          className="motion-toggle"
+          onClick={() => setAnimacionesPausadas((actual) => !actual)}
+          aria-pressed={!animacionesPausadas}
+          aria-label={animacionesPausadas ? "Activar animaciones" : "Pausar animaciones"}
+        >
+          <Equalizer />
+          <span>{animacionesPausadas ? "Efectos: pausa" : "Efectos: activos"}</span>
+        </button>
       </header>
+
+      <BackgroundMusic />
 
       {!sesion ? (
         <section className="entrada">
           <div className="presentacion">
-            <p className="subtitulo">
-              EL VOLUMEN LO PONES TÚ
+            <p className="subtitulo hero-eyebrow">
+              <span /> ROCK. METAL. SIN LÍMITES.
             </p>
 
-            <h1>Tu espacio para vivir el metal.</h1>
+            <h1>SUBE EL<br /><span>VOLUMEN.</span></h1>
 
-            <p>
-              Descubre bandas, álbumes y publicaciones de una
-              comunidad que comparte tu pasión por la música.
+            <p className="hero-description">
+              Hay música que se escucha. Y música que se siente.
+              Encuentra tu comunidad, comparte tus bandas y vive el metal.
             </p>
+            <ElectricStage />
+            <div className="hero-genres" aria-label="Géneros de la comunidad">
+              <span>HEAVY METAL</span><span>HARD ROCK</span><span>THRASH</span><span>Y MUCHO MÁS</span>
+            </div>
           </div>
 
-          <form
-            className="tarjeta formulario"
-            onSubmit={iniciarSesion}
+          {modoRecuperacion && (
+            <form className="tarjeta formulario acceso-formulario recovery-panel" onSubmit={solicitarRecuperacion} aria-labelledby="recuperacion-titulo" aria-busy={cargando}>
+              <h2 id="recuperacion-titulo">Recupera tu acceso.</h2>
+              <p className="access-intro">Envía una solicitud y un administrador aprobará el cambio.</p>
+              <label htmlFor="recovery-email">Correo electrónico</label>
+              <input id="recovery-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required maxLength={254} placeholder="tu@correo.com" />
+              <label htmlFor="recovery-password">Contraseña nueva</label>
+              <input id="recovery-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={12} autoComplete="new-password" />
+              <label htmlFor="recovery-confirm">Confirmar contraseña nueva</label>
+              <input id="recovery-confirm" type="password" value={passwordConfirmacion} onChange={(event) => setPasswordConfirmacion(event.target.value)} required minLength={12} autoComplete="new-password" />
+              {mensajeRegistro && <p className="mensaje-exito" role="status">{mensajeRegistro}</p>}
+              {error && <p className="error" role="alert">{error}</p>}
+              <button type="submit" className="access-submit" disabled={cargando}>{cargando ? "Enviando solicitud..." : "Solicitar cambio"}<ArrowIcon /></button>
+              <button type="button" className="enlace-formulario" onClick={cambiarModoRecuperacion} disabled={cargando}>Volver a iniciar sesión</button>
+            </form>
+          )}
+
+          {!modoRecuperacion && <form
+            className="tarjeta formulario acceso-formulario"
+            onSubmit={modoRegistro ? registrarUsuario : iniciarSesion}
+            aria-labelledby="acceso-titulo"
+            aria-busy={cargando}
           >
-            <h2>Inicia sesión</h2>
-            <p>Entra a tu cuenta de MetalVerse.</p>
+            <div className="access-ticket">
+              <span><BoltIcon /> BACKSTAGE PASS</span>
+              <span className="ticket-number">MV / 001</span>
+            </div>
+            <div className="access-mode">
+              <span>{modoRegistro ? "NUEVO INTEGRANTE" : "TU LUGAR ESTÁ AQUÍ"}</span>
+              <span className="amplifier-led" aria-hidden="true" />
+            </div>
+            <h2 id="acceso-titulo">{modoRegistro ? "Únete al ruido." : "Vuelve al ruido."}</h2>
+            <p className="access-intro">
+              {modoRegistro
+                ? "Crea tu cuenta y encuentra tu próximo gran riff."
+                : "Inicia sesión. Tu comunidad te está esperando."}
+            </p>
+
+            {modoRegistro && (
+              <>
+                <label htmlFor="nombre">Nombre</label>
+
+                <input
+                  id="nombre"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Tu nombre"
+                  value={nombre}
+                  onChange={(event) => setNombre(event.target.value)}
+                  required
+                  minLength={2}
+                  maxLength={100}
+                />
+              </>
+            )}
 
             <label htmlFor="email">
               Correo electrónico
@@ -183,12 +353,20 @@ const puedeGestionarRoles =
             <input
               id="password"
               type="password"
-              autoComplete="current-password"
+              autoComplete={modoRegistro ? "new-password" : "current-password"}
               placeholder="Tu contraseña"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
+              minLength={modoRegistro ? 12 : undefined}
+              aria-describedby={modoRegistro ? "password-ayuda" : undefined}
             />
+
+            {modoRegistro && <p className="password-hint" id="password-ayuda">Usa al menos 12 caracteres para tu contraseña.</p>}
+
+            {mensajeRegistro && (
+              <p className="mensaje-exito" role="status">{mensajeRegistro}</p>
+            )}
 
             {error && (
               <p className="error" role="alert">
@@ -196,10 +374,36 @@ const puedeGestionarRoles =
               </p>
             )}
 
-            <button type="submit" disabled={cargando}>
-              {cargando ? "Entrando..." : "Entrar"}
+            <button type="submit" className="access-submit" disabled={cargando}>
+              <span>{cargando
+                ? modoRegistro ? "Creando cuenta..." : "Entrando..."
+                : modoRegistro ? "Crear mi cuenta" : "Entrar a MetalVerse"}</span>
+              <ArrowIcon />
             </button>
-          </form>
+
+            <div className="access-divider"><span />{modoRegistro ? "¿YA ERES PARTE?" : "¿PRIMERA VEZ POR AQUÍ?"}<span /></div>
+            <button
+              type="button"
+              className="enlace-formulario"
+              onClick={cambiarModoAcceso}
+              disabled={cargando}
+            >
+              {modoRegistro
+                ? "Ya tengo una cuenta"
+                : "Crear una cuenta nueva"}
+            </button>
+            {!modoRegistro && (
+              <button
+                type="button"
+                className="enlace-formulario recovery-link"
+                onClick={cambiarModoRecuperacion}
+                disabled={cargando}
+              >
+                Olvidé mi contraseña
+              </button>
+            )}
+            <p className="access-footnote"><BoltIcon /> La misma pasión. Tu propio sonido.</p>
+          </form>}
         </section>
       ) : (
         <section className="panel">
@@ -228,6 +432,8 @@ const puedeGestionarRoles =
             </button>
           </div>
 
+          <CambioPassword token={sesion.token} onSesionVencida={manejarSesionVencida} />
+
           {puedeLeerPublicaciones && (
             <Publicaciones
               token={sesion.token}
@@ -249,6 +455,10 @@ const puedeGestionarRoles =
             token={sesion.token}
             onSesionVencida={manejarSesionVencida}
             />
+          )}
+
+          {puedeGestionarContrasenas && (
+            <SolicitudesPasswordAdmin token={sesion.token} onSesionVencida={manejarSesionVencida} />
           )}
 
           {puedeGestionarUsuarios && (
@@ -335,6 +545,11 @@ const puedeGestionarRoles =
           )}
         </section>
       )}
+      <footer className="site-footer">
+        <span>HECHO PARA ESCUCHARSE FUERTE.</span>
+        <span><Equalizer /> ROCK · METAL · COMUNIDAD</span>
+        <span>METALVERSE <BoltIcon /></span>
+      </footer>
     </main>
   );
 }

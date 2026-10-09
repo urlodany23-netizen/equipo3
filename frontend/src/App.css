@@ -113,6 +113,19 @@ button:hover:not(:disabled) {
   margin-top: 25px;
 }
 
+.formulario .enlace-formulario {
+  margin-top: 12px;
+  padding: 8px;
+  background: transparent;
+  color: #fda4af;
+  font-weight: normal;
+}
+
+.formulario .enlace-formulario:hover:not(:disabled) {
+  background: #3a1b2a;
+  color: white;
+}
+
 .error {
   color: #fda4af !important;
   background: #4c1023;
